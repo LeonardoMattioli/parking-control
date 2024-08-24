@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.swing.text.html.Option;
@@ -28,6 +29,7 @@ public class ParkingSpotController {
     @Autowired
     private ParkingSpotService parkingSpotService;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Object> saveParkingSpot(@RequestBody @Valid ParkingSpotDto parkingSpotDto) {
         if (parkingSpotService.existsByParkingSpotNumber(parkingSpotDto.parkingSpotNumber())) {
@@ -48,11 +50,12 @@ public class ParkingSpotController {
         return ResponseEntity.status(HttpStatus.CREATED).body(parkingSpotService.save(parkingSpotModel));
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping
     public ResponseEntity<Page<ParkingSpotModel>> getAllParkingSpot(@PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(parkingSpotService.getAll(pageable));
     }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping("{id}")
     public ResponseEntity<Object> getOneParkingLot(@PathVariable(value = "id") UUID id) {
         Optional<ParkingSpotModel> park = parkingSpotService.getOnePark(id);
@@ -61,7 +64,7 @@ public class ParkingSpotController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(park.get());
     }
-
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteParking(@PathVariable(value = "id") UUID id) {
         Optional<ParkingSpotModel> park = parkingSpotService.getOnePark(id);
@@ -72,7 +75,7 @@ public class ParkingSpotController {
         return ResponseEntity.status(HttpStatus.OK).body("Parking Spot deleted successfully");
     }
 
-    @PutMapping("{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Object> updateParkingSpot(@PathVariable(value = "id") UUID id, @Valid @RequestBody ParkingSpotDto parkingSpotDto) {
         Optional<ParkingSpotModel> park = parkingSpotService.getOnePark(id);
         if(park.isEmpty()) {
